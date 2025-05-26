@@ -1,0 +1,35 @@
+services:
+  # Serwis bazy danych (PostgreSQL)
+  database:
+    image: postgres:latest
+    container_name: cinema_db
+    environment:
+      POSTGRES_DB: cinema_db
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: secret
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  # Serwis aplikacji (Spring Boot)
+  app:
+    build: .
+    container_name: cinema_app
+    depends_on:
+      - database
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://database:5432/cinema_db
+      SPRING_DATASOURCE_USERNAME: admin
+      SPRING_DATASOURCE_PASSWORD: secret
+
+      # Możesz dodać te klucze, jeśli chcesz włączyć Flyway i JPA:
+      SPRING_FLYWAY_ENABLED: "true"
+      SPRING_FLYWAY_BASELINE_ON_MIGRATE: "true"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: "true"
+
+volumes:
+  pgdata:
