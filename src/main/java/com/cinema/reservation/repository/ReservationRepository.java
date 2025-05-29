@@ -29,12 +29,18 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     // User-specific reservations with pagination
     Page<Reservation> findByUserId(Long userId, Pageable pageable);
 
-    // Admin queries - polimorfizm w akcji (admin może widzieć wszystkie)
+    // Admin queries - może widzieć wszystkie
     @Query("SELECT r FROM Reservation r WHERE r.createdAt >= :fromDate ORDER BY r.createdAt DESC")
     List<Reservation> findRecentReservations(@Param("fromDate") LocalDateTime fromDate);
 
     // Business analytics
-    @Query("SELECT COUNT(r) FROM Reservation r WHERE r.status = 'CONFIRMED' AND DATE(r.createdAt) = CURRENT_DATE")
+    // Przełączone na zapytanie natywne, żeby uniknąć błędów porównywania TIMESTAMP z DATE
+    @Query(
+            value = "SELECT COUNT(*) FROM reservations r " +
+                    "WHERE r.status = 'CONFIRMED' " +
+                    "  AND CAST(r.created_at AS date) = CURRENT_DATE",
+            nativeQuery = true
+    )
     long countTodayConfirmedReservations();
 
     @Query("SELECT SUM(r.totalPrice) FROM Reservation r WHERE r.status = 'CONFIRMED' AND r.createdAt >= :fromDate")
@@ -44,7 +50,6 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     @Query("SELECT r FROM Reservation r WHERE r.status = 'PENDING' AND r.createdAt < :expiredBefore")
     List<Reservation> findExpiredPendingReservations(@Param("expiredBefore") LocalDateTime expiredBefore);
 
-    // Update operations - Dependency Inversion (service layer decyduje kiedy użyć)
     @Modifying
     @Query("UPDATE Reservation r SET r.status = 'EXPIRED' WHERE r.status = 'PENDING' AND r.createdAt < :expiredBefore")
     int expirePendingReservations(@Param("expiredBefore") LocalDateTime expiredBefore);
@@ -53,6 +58,6 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     @Query("SELECT r FROM Reservation r JOIN FETCH r.screening s JOIN FETCH s.movie m WHERE r.user.id = :userId ORDER BY r.createdAt DESC")
     List<Reservation> findUserReservationsWithDetails(@Param("userId") Long userId);
 
-    // Conflict detection - czy użytkownik ma już rezerwację na ten seans
+    // Conflict detection
     boolean existsByUserIdAndScreeningId(Long userId, Long screeningId);
 }

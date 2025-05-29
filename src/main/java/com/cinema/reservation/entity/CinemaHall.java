@@ -43,4 +43,19 @@ public class CinemaHall {
     public enum HallType {
         STANDARD, IMAX, VIP, DOLBY_ATMOS
     }
+
+    /**
+     * Alias getter for backward compatibility of tests expecting 'capacity'
+     */
+    @Transient
+    public Integer getCapacity() {
+        return totalSeats;
+    }
+
+    /**
+     * Alias setter for backward compatibility of tests expecting 'capacity'
+     */
+    public void setCapacity(Integer capacity) {
+        this.totalSeats = capacity;
+    }
 }
