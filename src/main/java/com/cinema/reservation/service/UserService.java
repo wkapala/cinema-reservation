@@ -106,6 +106,16 @@ public class UserService {
     }
 
     /**
+     * Sprawdza czy użytkownik jest właścicielem danych o podanym ID
+     * Używane w Spring Security @PreAuthorize
+     */
+    public boolean isOwner(Long userId, String email) {
+        return findById(userId)
+                .map(user -> user.getEmail().equals(email))
+                .orElse(false);
+    }
+
+    /**
      * Business logic - autoryzacja oparta na polimorfizmie
      */
     public boolean canUserPerformAction(Long userId, String action) {

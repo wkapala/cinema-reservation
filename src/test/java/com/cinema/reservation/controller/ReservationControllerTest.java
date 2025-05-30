@@ -82,12 +82,17 @@ class ReservationControllerTest {
 
     @Test
     @WithMockUser(roles = "ADMIN")
-    void createReservation_AsAdmin_ReturnsForbidden() throws Exception {
+    void createReservation_AsAdmin_ReturnsCreated() throws Exception {
+        // Mock the service to return a reservation
+        when(reservationService.createReservation(any(ReservationCreateRequest.class)))
+                .thenReturn(reservation);
+
         mockMvc.perform(post("/api/reservations")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createRequest)))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isCreated()) // Changed from isForbidden to isCreated
+                .andExpect(jsonPath("$.id", is(1))); // Added assertion for response
     }
 
     @Test

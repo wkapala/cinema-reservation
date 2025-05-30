@@ -23,7 +23,7 @@ public class ReservationController {
 
     private final ReservationService reservationService;
 
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAuthority('ROLE_USER') || hasAuthority('ROLE_ADMIN')")
     @PostMapping
     @Operation(summary = "Create reservation", description = "Creates a new reservation")
     public ResponseEntity<Reservation> createReservation(@RequestBody ReservationCreateRequest request) {
@@ -54,7 +54,7 @@ public class ReservationController {
         return ResponseEntity.ok(reservations);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @PutMapping("/{id}/confirm")
     @Operation(summary = "Confirm reservation", description = "Confirms a pending reservation")
     public ResponseEntity<Reservation> confirmReservation(@PathVariable Long id) {
@@ -66,7 +66,7 @@ public class ReservationController {
         }
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @PutMapping("/{id}/cancel")
     @Operation(summary = "Cancel reservation", description = "Cancels a reservation")
     public ResponseEntity<Reservation> cancelReservation(@PathVariable Long id) {

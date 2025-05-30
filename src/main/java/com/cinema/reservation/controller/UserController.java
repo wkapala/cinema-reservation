@@ -29,7 +29,7 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(user);
     }
 
-    @PreAuthorize("hasRole('ADMIN') or #id == authentication.principal.id")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') || @userService.isOwner(#id, authentication.name)")
     @GetMapping("/{id}")
     @Operation(summary = "Get user by ID", description = "Returns user details")
     public ResponseEntity<User> getUserById(@PathVariable Long id) {
@@ -38,7 +38,7 @@ public class UserController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PreAuthorize("hasRole('ADMIN')") // Użytkownik nie powinien znać ID innych przez email
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @GetMapping("/email/{email}")
     @Operation(summary = "Get user by email", description = "Returns user by email address")
     public ResponseEntity<User> getUserByEmail(@PathVariable String email) {
@@ -47,7 +47,7 @@ public class UserController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PreAuthorize("hasRole('ADMIN') or #id == authentication.principal.id")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') || @userService.isOwner(#id, authentication.name)")
     @PutMapping("/{id}")
     @Operation(summary = "Update user profile", description = "Updates user information")
     public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody UserUpdateRequest request) {
@@ -59,7 +59,7 @@ public class UserController {
         }
     }
 
-    @PreAuthorize("hasRole('ADMIN') or #id == authentication.principal.id")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') || @userService.isOwner(#id, authentication.name)")
     @DeleteMapping("/{id}")
     @Operation(summary = "Deactivate user", description = "Deactivates user account")
     public ResponseEntity<Void> deactivateUser(@PathVariable Long id) {
