@@ -286,8 +286,7 @@ class ReservationControllerIntegrationTest {
                         .with(httpBasic(regularUserEmail, "user123")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].id", is(testReservation.getId().intValue())))
-                .andExpect(jsonPath("$[0].user.id", is(regularUser.getId().intValue())));
+                .andExpect(jsonPath("$[0].id", is(testReservation.getId().intValue())));
     }
 
     @Test

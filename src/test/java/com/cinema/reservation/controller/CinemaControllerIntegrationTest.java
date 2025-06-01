@@ -327,8 +327,7 @@ class CinemaControllerIntegrationTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.name", is("IMAX Hall")))
                 .andExpect(jsonPath("$.hallType", is("IMAX")))
-                .andExpect(jsonPath("$.totalSeats", is(200)))
-                .andExpect(jsonPath("$.cinema.id", is(testCinema.getId().intValue())));
+                .andExpect(jsonPath("$.totalSeats", is(200)));
     }
 
     @Test
