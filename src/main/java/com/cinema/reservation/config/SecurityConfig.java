@@ -8,7 +8,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -51,28 +50,30 @@ public class SecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
+                        // Swagger - publiczny dostęp bez logowania
+                        .requestMatchers(
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/v3/api-docs/**",
+                                "/swagger-resources/**",
+                                "/webjars/**"
+                        ).permitAll()
                         .requestMatchers("/api/users/register").permitAll()
-                        // Movies - tylko odczyt publiczny, reszta wymaga uprawnień
                         .requestMatchers(HttpMethod.GET, "/api/movies", "/api/movies/**").permitAll()
                         .requestMatchers("/api/movies/**").hasRole("ADMIN")
-                        // Screenings - tylko odczyt publiczny
                         .requestMatchers(HttpMethod.GET, "/api/screenings", "/api/screenings/**").permitAll()
                         .requestMatchers("/api/screenings/**").hasRole("ADMIN")
-                        // Cinemas - GET publiczny, reszta ADMIN
                         .requestMatchers(HttpMethod.GET, "/api/cinemas/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/cinemas/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/cinemas/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/cinemas/**").hasRole("ADMIN")
-                        // Reservations - tylko dla zalogowanych
                         .requestMatchers("/api/reservations/**").hasAnyRole("USER", "ADMIN")
-                        // Users - tylko dla zalogowanych
                         .requestMatchers("/api/users/**").authenticated()
                         .anyRequest().authenticated()
                 )
-                .authenticationProvider(authenticationProvider())
-                .httpBasic(Customizer.withDefaults())  // Usunięte realmName
-                .formLogin(form -> form.disable());
+                .httpBasic(httpBasic -> {}) // Nowa składnia Spring Security 6+
+                .formLogin(form -> form.disable())
+                .authenticationProvider(authenticationProvider());
 
         return http.build();
     }
