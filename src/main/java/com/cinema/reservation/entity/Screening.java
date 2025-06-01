@@ -1,5 +1,8 @@
 package com.cinema.reservation.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -22,10 +25,12 @@ public class Screening {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "movie_id", nullable = false)
+    @JsonBackReference
     private Movie movie;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "hall_id", nullable = false)
+    @JsonBackReference // zapobiega zapętleniu przy hall.screenings
     private CinemaHall hall;
 
     @Column(name = "start_time", nullable = false)
@@ -43,6 +48,7 @@ public class Screening {
     private LocalDateTime createdAt;
 
     @OneToMany(mappedBy = "screening", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<Reservation> reservations;
 
     @PrePersist
@@ -53,7 +59,6 @@ public class Screening {
         }
     }
 
-    // Business logic method
     public boolean hasAvailableSeats(int requestedSeats) {
         return availableSeats != null && availableSeats >= requestedSeats;
     }

@@ -1,5 +1,6 @@
 package com.cinema.reservation.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.persistence.OneToMany;
@@ -23,6 +24,7 @@ public class RegularUser extends User {
     private String phoneNumber;
 
     @OneToMany(mappedBy = "user")
+    @JsonIgnore
     private List<Reservation> reservations;
 
     @Override

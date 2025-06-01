@@ -1,5 +1,7 @@
 package com.cinema.reservation.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -22,13 +24,16 @@ public class Reservation {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonBackReference
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "screening_id", nullable = false)
+    @JsonBackReference // 🔁 screening.reservations -> reservation.screening
     private Screening screening;
 
-    @OneToMany(mappedBy = "reservation", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "reservation", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference
     private List<ReservedSeat> reservedSeats;
 
     @Column(nullable = false, precision = 10, scale = 2)
@@ -53,7 +58,6 @@ public class Reservation {
         if (status == null) {
             status = ReservationStatus.PENDING;
         }
-        // Generate confirmation code
         confirmationCode = generateConfirmationCode();
     }
 

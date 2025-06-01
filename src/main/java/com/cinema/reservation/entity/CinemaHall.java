@@ -1,5 +1,8 @@
 package com.cinema.reservation.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -35,9 +38,11 @@ public class CinemaHall {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cinema_id")
+    @JsonBackReference
     private Cinema cinema;
 
     @OneToMany(mappedBy = "hall", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<Screening> screenings;
 
     public enum HallType {

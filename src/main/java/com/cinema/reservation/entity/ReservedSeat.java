@@ -1,5 +1,7 @@
 package com.cinema.reservation.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -20,10 +22,12 @@ public class ReservedSeat {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reservation_id", nullable = false)
+    @JsonBackReference // 🔁 reservation.reservedSeats -> reservedSeat.reservation
     private Reservation reservation;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "screening_id", nullable = false)
+    @JsonIgnore
     private Screening screening;
 
     @Column(name = "row_number", nullable = false)
