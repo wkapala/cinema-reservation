@@ -1,9 +1,14 @@
 package com.cinema.reservation.service;
 
+import com.cinema.reservation.dto.ScreeningCreateRequest;
+import com.cinema.reservation.entity.CinemaHall;
+import com.cinema.reservation.entity.Movie;
 import com.cinema.reservation.entity.Screening;
 import com.cinema.reservation.exception.InvalidScreeningDataException;
 import com.cinema.reservation.exception.ScreeningConflictException;
 import com.cinema.reservation.exception.ScreeningNotFoundException;
+import com.cinema.reservation.repository.CinemaHallRepository;
+import com.cinema.reservation.repository.MovieRepository;
 import com.cinema.reservation.repository.ScreeningRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,14 +25,23 @@ import java.util.Optional;
 @Transactional
 public class ScreeningService {
 
-    // Dependency Inversion
     private final ScreeningRepository screeningRepository;
+    private final MovieRepository movieRepository;
+    private final CinemaHallRepository cinemaHallRepository;
 
-    // Single Responsibility - tylko zarządzanie seansami
+    public Screening createScreeningFromRequest(ScreeningCreateRequest request) {
+        Movie movie = movieRepository.findById(request.getMovieId())
+                .orElseThrow(() -> new InvalidScreeningDataException("Movie not found with ID: " + request.getMovieId()));
+        CinemaHall hall = cinemaHallRepository.findById(request.getHallId())
+                .orElseThrow(() -> new InvalidScreeningDataException("Cinema hall not found with ID: " + request.getHallId()));
 
-    public Screening createScreening(Screening screening) {
-        log.info("Creating new screening for movie ID: {} at {}",
-                screening.getMovie().getId(), screening.getStartTime());
+        Screening screening = new Screening();
+        screening.setMovie(movie);
+        screening.setHall(hall);
+        screening.setStartTime(request.getStartTime());
+        screening.setEndTime(request.getEndTime());
+        screening.setPrice(request.getPrice());
+        screening.setAvailableSeats(hall.getTotalSeats());
 
         validateScreening(screening);
         checkForConflicts(screening);
@@ -73,24 +87,13 @@ public class ScreeningService {
     public boolean hasAvailableSeats(Long screeningId, Integer requiredSeats) {
         Optional<Screening> screeningOpt = screeningRepository.findById(screeningId);
 
-        if (screeningOpt.isEmpty()) {
-            return false;
-        }
-
-        Screening screening = screeningOpt.get();
-        return screening.hasAvailableSeats(requiredSeats);
+        return screeningOpt.map(screening -> screening.hasAvailableSeats(requiredSeats)).orElse(false);
     }
 
-    // Business logic - rezerwacja miejsc
     @Transactional
     public boolean reserveSeats(Long screeningId, Integer seatsToReserve) {
-        Optional<Screening> screeningOpt = screeningRepository.findById(screeningId);
-
-        if (screeningOpt.isEmpty()) {
-            throw new ScreeningNotFoundException("Screening not found with ID: " + screeningId);
-        }
-
-        Screening screening = screeningOpt.get();
+        Screening screening = screeningRepository.findById(screeningId)
+                .orElseThrow(() -> new ScreeningNotFoundException("Screening not found with ID: " + screeningId));
 
         if (!screening.hasAvailableSeats(seatsToReserve)) {
             return false;
@@ -107,7 +110,6 @@ public class ScreeningService {
         Screening existingScreening = screeningRepository.findById(id)
                 .orElseThrow(() -> new ScreeningNotFoundException("Screening not found with ID: " + id));
 
-        // Sprawdź konflikty tylko jeśli zmienia się czas lub sala
         if (!existingScreening.getStartTime().equals(screeningUpdates.getStartTime()) ||
                 !existingScreening.getHall().getId().equals(screeningUpdates.getHall().getId())) {
             checkForConflicts(screeningUpdates);
@@ -129,7 +131,6 @@ public class ScreeningService {
         log.info("Screening deleted with ID: {}", id);
     }
 
-    // Business validation
     private void validateScreening(Screening screening) {
         if (screening.getStartTime() == null) {
             throw new InvalidScreeningDataException("Start time cannot be null");
@@ -152,7 +153,6 @@ public class ScreeningService {
         }
     }
 
-    // Business logic - sprawdzenie konfliktów w sali
     private void checkForConflicts(Screening screening) {
         List<Screening> conflictingScreenings = screeningRepository.findConflictingScreenings(
                 screening.getHall().getId(),
